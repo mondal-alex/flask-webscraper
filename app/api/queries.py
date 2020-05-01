@@ -2,11 +2,18 @@ from app.api import bp
 from app.models import Query
 from app.api.auth import basic_auth
 from flask import jsonify
+from flask import request
+from google.cloud import datastore
+from app.models import store_time, fetch_times
 
+datastore_client = datastore.Client()
 
+# http POST https://localhost5000/api/queries link1=...,link2=...,
 @bp.route('/queries/', methods=["POST"])
-@basic_auth.login_required
-def get_JSON(link):
+def get_JSON():
+
+    # Store the current access time in Datastore.
+    store_time(datetime.datetime.now())
 
     # the client will send a dict of format {"link1": link1,...}
     data = request.get_json() or {}
@@ -20,6 +27,7 @@ def get_JSON(link):
         query_dict = current_query.generate_dict()
 
         new_data[link_name] = query_dict
+
 
     # return a JSON of format {"link1": query_dict, ...}
     return jsonify(new_data)
